@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.andreshj87.radialpager.demo.MainActivity"
-    >
+    tools:context="com.andreshj87.radialpager.demo.MainActivity">
 
   <com.andreshj87.radialpager.RadialPager
       android:id="@+id/radialpager"
