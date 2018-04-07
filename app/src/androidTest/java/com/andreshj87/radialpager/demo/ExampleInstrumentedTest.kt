@@ -1,4 +1,4 @@
-package com.andreshj87.radialpager
+package com.andreshj87.radialpager.demo
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4

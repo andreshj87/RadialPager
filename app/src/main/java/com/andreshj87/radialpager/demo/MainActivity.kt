@@ -1,4 +1,4 @@
-package com.andreshj87.radialpager
+package com.andreshj87.radialpager.demo
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle

@@ -1,4 +1,4 @@
-package com.andreshj87.radialpager
+package com.andreshj87.radialpager.demo
 
 import org.junit.Test
 
