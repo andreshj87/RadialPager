@@ -5,21 +5,8 @@
   <dimen name="radialpager_second_level_item_size">64dp</dimen>
   <dimen name="radialpager_third_level_item_size">48dp</dimen>
 
+  <dimen name="radialpager_center_level_radius">0dp</dimen>
   <dimen name="radialpager_first_level_radius">100dp</dimen>
   <dimen name="radialpager_second_level_radius">164dp</dimen>
   <dimen name="radialpager_third_level_radius">180dp</dimen>
-
-  <dimen name="radialpager_odd_level_first_item_angle">30</dimen>
-  <dimen name="radialpager_odd_level_second_item_angle">90</dimen>
-  <dimen name="radialpager_odd_level_third_item_angle">150</dimen>
-  <dimen name="radialpager_odd_level_fourth_item_angle">210</dimen>
-  <dimen name="radialpager_odd_level_fifth_item_angle">270</dimen>
-  <dimen name="radialpager_odd_level_sixth_item_angle">330</dimen>
-
-  <dimen name="radialpager_even_level_first_item_angle">0</dimen>
-  <dimen name="radialpager_even_level_second_item_angle">60</dimen>
-  <dimen name="radialpager_even_level_third_item_angle">120</dimen>
-  <dimen name="radialpager_even_level_fourth_item_angle">180</dimen>
-  <dimen name="radialpager_even_level_fifth_item_angle">240</dimen>
-  <dimen name="radialpager_even_level_sixth_item_angle">300</dimen>
 </resources>
