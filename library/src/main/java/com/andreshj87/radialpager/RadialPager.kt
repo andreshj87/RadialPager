@@ -3,14 +3,13 @@ package com.andreshj87.radialpager
 import android.content.Context
 import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.View
+import android.util.Log
+import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import de.hdodenhof.circleimageview.CircleImageView
 
-class RadialPager<T> : ConstraintLayout {
+class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
 
   private val MAX_LAYERS = 3
   private val MAX_ITEMS_PER_LAYER = 6
@@ -28,6 +27,9 @@ class RadialPager<T> : ConstraintLayout {
   var middleItem: RadialPagerItem<T>? = null
   val items: ArrayList<RadialPagerItem<T>> = ArrayList()
 
+  var vertialCoordinate = 0
+  var previousVerticalCoordinate: Float = -1f
+
   constructor(context: Context?) : super(context) {
     initView()
   }
@@ -37,6 +39,7 @@ class RadialPager<T> : ConstraintLayout {
   }
 
   fun initView() {
+    setOnTouchListener(this)
     baseView = LayoutInflater.from(context).inflate(R.layout.radial_pager, this, true)
     constraintLayout = baseView!!.findViewById(R.id.constraint_layout)
     centerView = baseView?.findViewById(R.id.center_item)
@@ -64,6 +67,32 @@ class RadialPager<T> : ConstraintLayout {
     itemEvenAngles.add(resources.getInteger(R.integer.radialpager_even_level_fourth_item_angle))
     itemEvenAngles.add(resources.getInteger(R.integer.radialpager_even_level_fifth_item_angle))
     itemEvenAngles.add(resources.getInteger(R.integer.radialpager_even_level_sixth_item_angle))
+  }
+
+  override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+    Log.i(javaClass.simpleName, event?.toString())
+
+    if (event?.action == MotionEvent.ACTION_UP) {
+      snapViews()
+      vertialCoordinate = 0
+      previousVerticalCoordinate = -1f
+    } else if (event?.action == MotionEvent.ACTION_DOWN) {
+      vertialCoordinate = 0
+      previousVerticalCoordinate = event.y
+    } else if (event?.action == MotionEvent.ACTION_MOVE) {
+      if (previousVerticalCoordinate < 0) {
+        previousVerticalCoordinate = event.y
+      } else {
+        if (event.y > previousVerticalCoordinate) {
+          vertialCoordinate++
+        } else {
+          vertialCoordinate--
+        }
+      }
+      Log.i(javaClass.simpleName, "Moving! " + vertialCoordinate)
+    }
+
+    return true
   }
 
   fun setText(text: String) {
@@ -129,6 +158,10 @@ class RadialPager<T> : ConstraintLayout {
     layoutParams.circleAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer).toFloat() else itemOddAngles.get(itemPerLayer).toFloat()
     item.layoutParams = layoutParams
     constraintLayout!!.addView(item)
+  }
+
+  fun snapViews() {
+    Log.i(javaClass.simpleName, "Snap items!")
   }
 
   fun Int.isEven(): Boolean {
