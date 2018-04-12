@@ -3,6 +3,7 @@ package com.andreshj87.radialpager
 import android.content.Context
 import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
@@ -12,12 +13,13 @@ import de.hdodenhof.circleimageview.CircleImageView
 class RadialPager<T> : ConstraintLayout {
 
   private val MAX_LAYERS = 3
-  private val MAX_ITEMS_PER_LEVEL = 6
+  private val MAX_ITEMS_PER_LAYER = 6
+  private val MAX_ITEMS = MAX_LAYERS * MAX_ITEMS_PER_LAYER
 
   private val itemSizes: ArrayList<Float> = ArrayList(MAX_LAYERS)
   private val itemRadius: ArrayList<Float> = ArrayList(MAX_LAYERS)
-  private val itemOddAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LEVEL)
-  private val itemEvenAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LEVEL)
+  private val itemOddAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LAYER)
+  private val itemEvenAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LAYER)
 
   var baseView: View? = null
   var constraintLayout: ConstraintLayout? = null
@@ -80,13 +82,21 @@ class RadialPager<T> : ConstraintLayout {
   }
 
   fun renderInitialItems(item: ArrayList<RadialPagerItem<T>>) {
-    var currentLayer: Int = 0
+    var currentLayer: Int = 1
     var currentItemPerLayer: Int = 0
     item.forEachIndexed { index, radialPagerItem ->
-      renderItem(radialPagerItem, currentLayer, currentItemPerLayer)
+      if (index >= MAX_ITEMS) {
+        return
+      }
+
+      if (radialPagerItem.imageResource == null && radialPagerItem.imageUrl == null) {
+        renderImagelessItem(radialPagerItem, index.toString(), currentLayer, currentItemPerLayer)
+      } else {
+        renderItem(radialPagerItem, currentLayer, currentItemPerLayer)
+      }
 
       currentItemPerLayer++
-      if (currentItemPerLayer >= MAX_ITEMS_PER_LEVEL) {
+      if (currentItemPerLayer >= MAX_ITEMS_PER_LAYER) {
         currentLayer++
         currentItemPerLayer = 0
       }
@@ -96,6 +106,22 @@ class RadialPager<T> : ConstraintLayout {
   fun renderItem(radialPagerItem: RadialPagerItem<T>, layer: Int, itemPerLayer: Int) {
     val item = CircleImageView(context)
     item.setImageResource(radialPagerItem.imageResource!!)
+    val itemSize: Float = itemSizes.get(layer)
+    val layoutParams: ConstraintLayout.LayoutParams = ConstraintLayout.LayoutParams(itemSize.toInt(), itemSize.toInt())
+    layoutParams.circleConstraint = centerView!!.id
+    layoutParams.circleRadius = itemRadius.get(layer).toInt()
+    layoutParams.circleAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer).toFloat() else itemOddAngles.get(itemPerLayer).toFloat()
+    item.layoutParams = layoutParams
+    constraintLayout!!.addView(item)
+  }
+
+  @Deprecated("Remove this eventually")
+  fun renderImagelessItem(radialPagerItem: RadialPagerItem<T>, text: String, layer: Int, itemPerLayer: Int) {
+    val item = TextView(context)
+    item.text = text
+    item.setTextColor(resources.getColor(android.R.color.white))
+    item.setBackgroundResource(R.drawable.radial_pager_item_text_background)
+    item.gravity = Gravity.CENTER
     val itemSize: Float = itemSizes.get(layer)
     val layoutParams: ConstraintLayout.LayoutParams = ConstraintLayout.LayoutParams(itemSize.toInt(), itemSize.toInt())
     layoutParams.circleConstraint = centerView!!.id

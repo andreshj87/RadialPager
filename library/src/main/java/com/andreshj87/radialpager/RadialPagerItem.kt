@@ -34,7 +34,8 @@ class RadialPagerItem<T> private constructor(builder: Builder<*>) {
 
     fun build(): RadialPagerItem<T> {
       if (imageResource == null && imageUrl == null) {
-        throw IllegalArgumentException("You have to provide an image")
+        // TODO remove this eventually
+        //throw IllegalArgumentException("You have to provide an image")
       }
 
       return RadialPagerItem(this)

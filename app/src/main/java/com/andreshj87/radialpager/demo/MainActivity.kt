@@ -20,21 +20,18 @@ class MainActivity : AppCompatActivity() {
     val person = Person("Putin",
         "https://static.timesofisrael.com/www/uploads/2018/03/000_12537P-e1520673369804-640x400.jpg")
 
-    val radialPagerItem = RadialPagerItem.Builder<Person>()
+    val radialPagerItemCenter = RadialPagerItem.Builder<Person>()
         .data(person)
         .imageResource(R.drawable.putin)
         .build()
 
-    radialPager.setCenterItem(radialPagerItem)
+    radialPager.setCenterItem(radialPagerItemCenter)
+
+    val radialPagerItem = RadialPagerItem.Builder<Person>()
+        .data(person)
+        .build()
 
     val items: ArrayList<RadialPagerItem<Person>> = ArrayList()
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
     items.add(radialPagerItem)
     items.add(radialPagerItem)
     items.add(radialPagerItem)
