@@ -53,6 +53,13 @@ class MainActivity : AppCompatActivity() {
     items.add(radialPagerItem)
     items.add(radialPagerItem)
 
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+
     radialPager.setItems(items)
   }
 }

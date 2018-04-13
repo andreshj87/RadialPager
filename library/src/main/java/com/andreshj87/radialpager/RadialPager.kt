@@ -97,8 +97,8 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
         if (event.y >= previousVerticalCoordinate) {
           Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y > previousVerticalCoordinate")
           verticalCoordinate++
-          if (verticalCoordinate*2 in 0..100 && !blockMovement) {
-            moveDownItems(verticalCoordinate*2)
+          if (verticalCoordinate*6 in 0..100 && !blockMovement) {
+            moveDownItems(verticalCoordinate*6)
           }
         } else {
           Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y IS NOT > previousVerticalCoordinate")
@@ -164,6 +164,10 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
         it.alpha = ((100f - percentage.toFloat()) / 100f)
       }
 
+      if (layer > MAX_LAYERS) {
+        it.alpha = (percentage.toFloat()) / 100f
+      }
+
       if (layoutParams.width > itemSizes.get(layer-1)) {
         Log.i(javaClass.simpleName, "[BLOCKING THE FUCK OUT OF IT] layoutParams.width " + layoutParams.width + " itemSizes.get(layer-1) " + itemSizes.get(layer-1) )
         blockMovement = true
@@ -226,7 +230,7 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
     var currentLayer: Int = 1
     var currentItemPerLayer: Int = 0
     item.forEachIndexed { index, radialPagerItem ->
-      if (index >= MAX_ITEMS) {
+      if (index >= MAX_ITEMS + MAX_ITEMS_PER_LAYER) {
         return
       }
 
@@ -253,6 +257,9 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
     layoutParams.circleRadius = itemRadius.get(layer).toInt()
     layoutParams.circleAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer).toFloat() else itemOddAngles.get(itemPerLayer).toFloat()
     item.layoutParams = layoutParams
+    if (layer > MAX_LAYERS) {
+      item.alpha = 0f
+    }
     itemViews.add(item)
     constraintLayout!!.addView(item)
   }
@@ -270,6 +277,9 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
     layoutParams.circleRadius = itemRadius.get(layer).toInt()
     layoutParams.circleAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer).toFloat() else itemOddAngles.get(itemPerLayer).toFloat()
     item.layoutParams = layoutParams
+    if (layer > MAX_LAYERS) {
+      item.alpha = 0f
+    }
     itemViews.add(item)
     constraintLayout!!.addView(item)
   }
