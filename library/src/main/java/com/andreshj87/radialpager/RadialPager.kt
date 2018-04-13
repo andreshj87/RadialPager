@@ -77,38 +77,48 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
     Log.i(javaClass.simpleName, "MotionEvent.y = " + event?.y)
 
     if (event?.action == MotionEvent.ACTION_UP) {
+      Log.i(javaClass.simpleName, "[ACTION_UP]")
       snapViews()
       verticalCoordinate = 0
       previousVerticalCoordinate = -1f
       blockMovement = false
     } else if (event?.action == MotionEvent.ACTION_DOWN) {
+      Log.i(javaClass.simpleName, "[ACTION_DOWN]")
       verticalCoordinate = 0
       previousVerticalCoordinate = event.y
       blockMovement = false
     } else if (event?.action == MotionEvent.ACTION_MOVE) {
+      Log.i(javaClass.simpleName, "[ACTION_MOVE]")
       if (previousVerticalCoordinate < 0) {
+        Log.i(javaClass.simpleName, "[ACTION_MOVE] Initializing previousVerticalCoordinate")
         previousVerticalCoordinate = event.y
       } else {
-        if (event.y > previousVerticalCoordinate) {
+        Log.i(javaClass.simpleName, "[ACTION_MOVE] Not initializing")
+        if (event.y >= previousVerticalCoordinate) {
+          Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y > previousVerticalCoordinate")
           verticalCoordinate++
-          if (verticalCoordinate in 0..100 && !blockMovement) {
-            moveDownItems(verticalCoordinate / 4)
+          if (verticalCoordinate*2 in 0..100 && !blockMovement) {
+            moveDownItems(verticalCoordinate*2)
           }
         } else {
+          Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y IS NOT > previousVerticalCoordinate")
           //verticalCoordinate--
           //moveUpItems(verticalCoordinate / 8)
         }
         previousVerticalCoordinate = event.y
       }
-      var wtf = 2
-      wtf = 4
-      Log.i(javaClass.simpleName, "Moving! " + verticalCoordinate)
+      Log.i(javaClass.simpleName, "[ACTION_MOVE] Finishing... verticalCoordinate = " + verticalCoordinate)
     }
 
     return true
   }
 
   private fun moveDownItems(percentage: Int) {
+    if (percentage > 100) {
+      blockMovement = true
+      return
+    }
+
     var layer: Int = 1
     var itemPerLayer: Int = 0
     itemViews.forEach {
@@ -120,40 +130,42 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
       }
 
       val totalSize = itemSizes.get(layer - 1) - itemSizes.get(layer)
-      if (layer == 1) {
+      if (layer == 1 && itemPerLayer == 1) {
         Log.i(javaClass.simpleName, "totalSize between layer 1 and 0 = " + totalSize)
       }
       val totalRadius = itemRadius.get(layer) - itemRadius.get(layer - 1)
-      //val totalAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer) - itemEvenAngles.get( (itemPerLayer - 1).rightMod(6) )
-//        else itemOddAngles.get(itemPerLayer) - itemOddAngles.get( (itemPerLayer - 1).rightMod(6) )
+      val totalEvenAngle = (itemEvenAngles.get(itemPerLayer) - itemOddAngles.get( (itemPerLayer-1).rightMod(6) )).rightMod(360)
+      val totalOddAngle = (itemOddAngles.get(itemPerLayer) - itemEvenAngles.get( (itemPerLayer-1).rightMod(6) )).rightMod(360)
+      val totalAngle = if (layer.isEven()) totalEvenAngle else totalOddAngle
 
       val dSize = (percentage * totalSize) / 100
-      if (layer == 1) {
-        Log.i(javaClass.simpleName, "dSize = " + dSize)
-      }
       val dRadius = (percentage * totalRadius) / 100
-  //    val dAngle = (percentage * totalAngle) / 100
+      val dAngle = (percentage * totalAngle) / 100
 
-      if (layer==1) {
+      val currentSize = itemSizes.get(layer) + dSize
+      if (layer == 1 && itemPerLayer == 1) {
         Log.i(javaClass.simpleName, "Layer[0].size = " + itemSizes.get(layer-1))
-        Log.i(javaClass.simpleName, "CurrentLayerSize = " + layoutParams.width)
-      }
+        Log.i(javaClass.simpleName, "Actual CurrentLayerSize = " + layoutParams.width)
 
-      val currentSize = layoutParams.width + dSize
-      if (layer == 1) {
-        Log.i(javaClass.simpleName, "ELSE, currentSize = " + currentSize)
+        Log.i(javaClass.simpleName, "Percentage " + percentage)
+        Log.i(javaClass.simpleName, "dSize = " + dSize)
+        Log.i(javaClass.simpleName, "Calculated currentSize = " + currentSize)
       }
-      val currentRadius = layoutParams.circleRadius - dRadius
-//        val currentAngle = layoutParams.circleAngle - dAngle
+      val currentRadius = itemRadius.get(layer) - dRadius
+      val currentAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer) - dAngle else itemOddAngles.get(itemPerLayer) - dAngle
 
       layoutParams.width = currentSize.toInt()
       layoutParams.height = currentSize.toInt()
       layoutParams.circleRadius = currentRadius.toInt()
-      //layoutParams.circleAngle = currentAngle
+      layoutParams.circleAngle = currentAngle.toFloat()
       it.layoutParams = layoutParams
 
+      if (layer == 1) {
+        it.alpha = ((100f - percentage.toFloat()) / 100f)
+      }
+
       if (layoutParams.width > itemSizes.get(layer-1)) {
-        Log.i(javaClass.simpleName, "Estoy en el if que lo para todo!!")
+        Log.i(javaClass.simpleName, "[BLOCKING THE FUCK OUT OF IT] layoutParams.width " + layoutParams.width + " itemSizes.get(layer-1) " + itemSizes.get(layer-1) )
         blockMovement = true
       }
 
