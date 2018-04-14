@@ -9,28 +9,26 @@ import android.widget.ImageView
 import android.widget.TextView
 import de.hdodenhof.circleimageview.CircleImageView
 
-class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
+class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener {
 
   private val MAX_LAYERS = 3
   private val MAX_ITEMS_PER_LAYER = 6
   private val MAX_ITEMS = MAX_LAYERS * MAX_ITEMS_PER_LAYER
+
+  private val scrollManager = RadialPagerScrollManager(this)
 
   private val itemSizes: ArrayList<Float> = ArrayList(MAX_LAYERS)
   private val itemRadius: ArrayList<Float> = ArrayList(MAX_LAYERS)
   private val itemOddAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LAYER)
   private val itemEvenAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LAYER)
 
-  var baseView: View? = null
-  var constraintLayout: ConstraintLayout? = null
-  var centerView: ImageView? = null
-  var itemViews = ArrayList<View>()
+  private var baseView: View? = null
+  private var constraintLayout: ConstraintLayout? = null
+  private var centerView: ImageView? = null
+  private var itemViews = ArrayList<View>()
 
-  var middleItem: RadialPagerItem<T>? = null
-  val items: ArrayList<RadialPagerItem<T>> = ArrayList()
-
-  var verticalCoordinate = 0
-  var previousVerticalCoordinate: Float = -1f
-  var blockMovement = false
+  private var middleItem: RadialPagerItem<T>? = null
+  private val items: ArrayList<RadialPagerItem<T>> = ArrayList()
 
   constructor(context: Context?) : super(context) {
     initView()
@@ -41,10 +39,11 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
   }
 
   fun initView() {
-    setOnTouchListener(this)
     baseView = LayoutInflater.from(context).inflate(R.layout.radial_pager, this, true)
     constraintLayout = baseView!!.findViewById(R.id.constraint_layout)
     centerView = baseView?.findViewById(R.id.center_item)
+
+    setOnTouchListener(scrollManager)
 
     itemSizes.add(resources.getDimension(R.dimen.radialpager_center_item_size))
     itemSizes.add(resources.getDimension(R.dimen.radialpager_first_level_item_size))
@@ -73,49 +72,12 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
     itemEvenAngles.add(resources.getInteger(R.integer.radialpager_even_level_sixth_item_angle))
   }
 
-  override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-    Log.i(javaClass.simpleName, "MotionEvent.y = " + event?.y)
-
-    if (event?.action == MotionEvent.ACTION_UP) {
-      Log.i(javaClass.simpleName, "[ACTION_UP]")
-      snapViews()
-      verticalCoordinate = 0
-      previousVerticalCoordinate = -1f
-      blockMovement = false
-    } else if (event?.action == MotionEvent.ACTION_DOWN) {
-      Log.i(javaClass.simpleName, "[ACTION_DOWN]")
-      verticalCoordinate = 0
-      previousVerticalCoordinate = event.y
-      blockMovement = false
-    } else if (event?.action == MotionEvent.ACTION_MOVE) {
-      Log.i(javaClass.simpleName, "[ACTION_MOVE]")
-      if (previousVerticalCoordinate < 0) {
-        Log.i(javaClass.simpleName, "[ACTION_MOVE] Initializing previousVerticalCoordinate")
-        previousVerticalCoordinate = event.y
-      } else {
-        Log.i(javaClass.simpleName, "[ACTION_MOVE] Not initializing")
-        if (event.y >= previousVerticalCoordinate) {
-          Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y > previousVerticalCoordinate")
-          verticalCoordinate++
-          if (verticalCoordinate*6 in 0..100 && !blockMovement) {
-            moveDownItems(verticalCoordinate*6)
-          }
-        } else {
-          Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y IS NOT > previousVerticalCoordinate")
-          //verticalCoordinate--
-          //moveUpItems(verticalCoordinate / 8)
-        }
-        previousVerticalCoordinate = event.y
-      }
-      Log.i(javaClass.simpleName, "[ACTION_MOVE] Finishing... verticalCoordinate = " + verticalCoordinate)
-    }
-
-    return true
+  override fun snap() {
+    Log.i(javaClass.simpleName, "Snap items!")
   }
 
-  private fun moveDownItems(percentage: Int) {
-    if (percentage > 100) {
-      blockMovement = true
+  override fun moveForward(movementPercentage: Int) {
+    if (movementPercentage > 100) {
       return
     }
 
@@ -134,20 +96,20 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
         Log.i(javaClass.simpleName, "totalSize between layer 1 and 0 = " + totalSize)
       }
       val totalRadius = itemRadius.get(layer) - itemRadius.get(layer - 1)
-      val totalEvenAngle = (itemEvenAngles.get(itemPerLayer) - itemOddAngles.get( (itemPerLayer-1).rightMod(6) )).rightMod(360)
-      val totalOddAngle = (itemOddAngles.get(itemPerLayer) - itemEvenAngles.get( (itemPerLayer-1).rightMod(6) )).rightMod(360)
+      val totalEvenAngle = (itemEvenAngles.get(itemPerLayer) - itemOddAngles.get( (itemPerLayer-1).module(6) )).module(360)
+      val totalOddAngle = (itemOddAngles.get(itemPerLayer) - itemEvenAngles.get( (itemPerLayer-1).module(6) )).module(360)
       val totalAngle = if (layer.isEven()) totalEvenAngle else totalOddAngle
 
-      val dSize = (percentage * totalSize) / 100
-      val dRadius = (percentage * totalRadius) / 100
-      val dAngle = (percentage * totalAngle) / 100
+      val dSize = (movementPercentage * totalSize) / 100
+      val dRadius = (movementPercentage * totalRadius) / 100
+      val dAngle = (movementPercentage * totalAngle) / 100
 
       val currentSize = itemSizes.get(layer) + dSize
       if (layer == 1 && itemPerLayer == 1) {
         Log.i(javaClass.simpleName, "Layer[0].size = " + itemSizes.get(layer-1))
         Log.i(javaClass.simpleName, "Actual CurrentLayerSize = " + layoutParams.width)
 
-        Log.i(javaClass.simpleName, "Percentage " + percentage)
+        Log.i(javaClass.simpleName, "Percentage " + movementPercentage)
         Log.i(javaClass.simpleName, "dSize = " + dSize)
         Log.i(javaClass.simpleName, "Calculated currentSize = " + currentSize)
       }
@@ -161,23 +123,22 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
       it.layoutParams = layoutParams
 
       if (layer == 1) {
-        it.alpha = ((100f - percentage.toFloat()) / 100f)
+        it.alpha = ((100f - movementPercentage.toFloat()) / 100f)
       }
 
       if (layer > MAX_LAYERS) {
-        it.alpha = (percentage.toFloat()) / 100f
+        it.alpha = (movementPercentage.toFloat()) / 100f
       }
 
       if (layoutParams.width > itemSizes.get(layer-1)) {
         Log.i(javaClass.simpleName, "[BLOCKING THE FUCK OUT OF IT] layoutParams.width " + layoutParams.width + " itemSizes.get(layer-1) " + itemSizes.get(layer-1) )
-        blockMovement = true
       }
 
       itemPerLayer++
     }
   }
 
-  fun moveUpItems(percentage: Int) {
+  override fun moveBackwards(movementPercentage: Int) {
     var layer: Int = 1
     var itemPerLayer: Int = 0
     itemViews.forEach {
@@ -190,12 +151,12 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
 
       val dSize = itemSizes.get(layer) - itemSizes.get(layer + 1)
       val dRadius = itemRadius.get(layer) - itemRadius.get(layer + 1)
-      val dAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer) - itemEvenAngles.get(  (itemPerLayer + 1).rightMod(6) )
-      else itemOddAngles.get(itemPerLayer) - itemOddAngles.get( (itemPerLayer + 1).rightMod(6) )
+      val dAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer) - itemEvenAngles.get(  (itemPerLayer + 1).module(6) )
+      else itemOddAngles.get(itemPerLayer) - itemOddAngles.get( (itemPerLayer + 1).module(6) )
 
-      val currentSize = layoutParams.width - ((percentage * dSize) / 100)
-      val currentRadius = layoutParams.circleRadius + ((percentage * dRadius) / 100)
-      val currentAngle = layoutParams.circleAngle + ((percentage * dAngle) / 100)
+      val currentSize = layoutParams.width - ((movementPercentage * dSize) / 100)
+      val currentRadius = layoutParams.circleRadius + ((movementPercentage * dRadius) / 100)
+      val currentAngle = layoutParams.circleAngle + ((movementPercentage * dAngle) / 100)
 
       if (currentSize < itemSizes.get(layer + 1)) {
         return
@@ -284,15 +245,11 @@ class RadialPager<T> : ConstraintLayout, View.OnTouchListener {
     constraintLayout!!.addView(item)
   }
 
-  fun snapViews() {
-    Log.i(javaClass.simpleName, "Snap items!")
-  }
-
   fun Int.isEven(): Boolean {
     return this % 2 == 0
   }
 
-  fun Int.rightMod(mod: Int): Int {
+  fun Int.module(mod: Int): Int {
     var r = this.rem(mod)
     if (r < 0) r += mod
 
