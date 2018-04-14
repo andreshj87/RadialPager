@@ -39,25 +39,27 @@ class RadialPagerScrollManager(private val scrollListener: ScrollListener) : Vie
         previousVerticalCoordinate = event.y
       } else {
         Log.i(javaClass.simpleName, "[ACTION_MOVE] Not initializing")
-        if (event.y >= previousVerticalCoordinate) {
-          Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y > previousVerticalCoordinate")
+        if (event.y > previousVerticalCoordinate) {
+//          Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y > previousVerticalCoordinate")
           verticalCoordinate++
 //          if (verticalCoordinate*movementMultiplier in 0..100 && !blockMovement) {
 //            scrollListener.moveForward(verticalCoordinate*movementMultiplier)
 //          }
         } else {
-          Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y IS NOT > previousVerticalCoordinate")
+          //Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y IS NOT > previousVerticalCoordinate")
           verticalCoordinate--
 //          if (verticalCoordinate*movementMultiplier in 0..100 && !blockMovement) {
 //            scrollListener.moveBackwards(verticalCoordinate * movementMultiplier)
 //          }
         }
 
-        var temp = verticalCoordinate * movementMultiplier
-        if (temp < 0) {
-          scrollListener.moveBackwards(temp * -1)
-        } else {
-          scrollListener.moveForward(temp)
+        val calculatedVerticalCoordinate = verticalCoordinate * movementMultiplier
+        if (calculatedVerticalCoordinate in -100..100) {
+          if (calculatedVerticalCoordinate < 0) {
+            scrollListener.moveBackwards(calculatedVerticalCoordinate * -1)
+          } else {
+            scrollListener.moveForward(calculatedVerticalCoordinate)
+          }
         }
 
         previousVerticalCoordinate = event.y
