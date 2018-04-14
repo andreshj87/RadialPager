@@ -60,6 +60,35 @@ class MainActivity : AppCompatActivity() {
     items.add(radialPagerItem)
     items.add(radialPagerItem)
 
+    // 5
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+    items.add(radialPagerItem)
+
     radialPager.setItems(items)
   }
 }

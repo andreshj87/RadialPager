@@ -3,18 +3,13 @@ package com.andreshj87.radialpager
 import android.content.Context
 import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
-import android.util.Log
-import android.view.*
-import android.widget.ImageView
-import android.widget.TextView
-import de.hdodenhof.circleimageview.CircleImageView
+import android.view.LayoutInflater
 
 class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener {
 
+  private val radialPagerItemManager = RadialPagerItemManager<T>()
   private val radialPagerRenderer = RadialPagerViewRenderer<T>()
   private val scrollManager = RadialPagerScrollManager(this)
-
-  private val items: ArrayList<RadialPagerItem<T>> = ArrayList()
 
   constructor(context: Context?) : super(context) {
     init()
@@ -47,7 +42,8 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
   }
 
   fun setItems(items: ArrayList<RadialPagerItem<T>>) {
-    this.items.addAll(items)
-    radialPagerRenderer.renderInitialItems(this.items)
+    radialPagerItemManager.items = items
+    val initialItems = radialPagerItemManager.getInitialItems()
+    radialPagerRenderer.renderInitialItems(initialItems)
   }
 }
