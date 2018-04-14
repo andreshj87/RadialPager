@@ -50,12 +50,14 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
     itemSizes.add(resources.getDimension(R.dimen.radialpager_second_level_item_size))
     itemSizes.add(resources.getDimension(R.dimen.radialpager_third_level_item_size))
     itemSizes.add(resources.getDimension(R.dimen.radialpager_fourth_level_item_size))
+    itemSizes.add(resources.getDimension(R.dimen.radialpager_fifth_level_item_size))
 
     itemRadius.add(resources.getDimension(R.dimen.radialpager_center_level_radius))
     itemRadius.add(resources.getDimension(R.dimen.radialpager_first_level_radius))
     itemRadius.add(resources.getDimension(R.dimen.radialpager_second_level_radius))
     itemRadius.add(resources.getDimension(R.dimen.radialpager_third_level_radius))
     itemRadius.add(resources.getDimension(R.dimen.radialpager_fourth_level_radius))
+    itemRadius.add(resources.getDimension(R.dimen.radialpager_fifth_level_radius))
 
     itemOddAngles.add(resources.getInteger(R.integer.radialpager_odd_level_first_item_angle))
     itemOddAngles.add(resources.getInteger(R.integer.radialpager_odd_level_second_item_angle))
@@ -77,9 +79,7 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
   }
 
   override fun moveForward(movementPercentage: Int) {
-    if (movementPercentage > 100) {
-      return
-    }
+    if (movementPercentage > 100) return
 
     var layer: Int = 1
     var itemPerLayer: Int = 0
@@ -127,7 +127,7 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
       }
 
       if (layer > MAX_LAYERS) {
-        it.alpha = (movementPercentage.toFloat()) / 100f
+        it.alpha = movementPercentage.toFloat() / 100f
       }
 
       if (layoutParams.width > itemSizes.get(layer-1)) {
@@ -139,6 +139,8 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
   }
 
   override fun moveBackwards(movementPercentage: Int) {
+    if (movementPercentage > 100) return
+
     var layer: Int = 1
     var itemPerLayer: Int = 0
     itemViews.forEach {
@@ -149,26 +151,39 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
         itemPerLayer = 0
       }
 
-      val dSize = itemSizes.get(layer) - itemSizes.get(layer + 1)
-      val dRadius = itemRadius.get(layer) - itemRadius.get(layer + 1)
-      val dAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer) - itemEvenAngles.get(  (itemPerLayer + 1).module(6) )
-      else itemOddAngles.get(itemPerLayer) - itemOddAngles.get( (itemPerLayer + 1).module(6) )
+      val totalSize = itemSizes.get(layer) - itemSizes.get(layer + 1)
+      val totalRadius = itemRadius.get(layer + 1) - itemRadius.get(layer)
+      val totalEvenAngle = (itemEvenAngles.get( (itemPerLayer+1).module(6) ) - itemOddAngles.get(itemPerLayer)).module(360)
+      val totalOddAngle = (itemOddAngles.get( (itemPerLayer+1).module(6) ) - itemEvenAngles.get(itemPerLayer)).module(360)
+      val totalAngle = if (layer.isEven()) totalEvenAngle else totalOddAngle
 
-      val currentSize = layoutParams.width - ((movementPercentage * dSize) / 100)
-      val currentRadius = layoutParams.circleRadius + ((movementPercentage * dRadius) / 100)
-      val currentAngle = layoutParams.circleAngle + ((movementPercentage * dAngle) / 100)
+      val dSize = (movementPercentage * totalSize) / 100
+      val dRadius = (movementPercentage * totalRadius) / 100
+      val dAngle = (movementPercentage * totalAngle) / 100
 
-      if (currentSize < itemSizes.get(layer + 1)) {
-        return
-      } else {
-        layoutParams.width = currentSize.toInt()
-        layoutParams.height = currentSize.toInt()
-        layoutParams.circleRadius = currentRadius.toInt()
-        layoutParams.circleAngle = currentAngle
-        it.layoutParams = layoutParams
+      val currentSize = itemSizes.get(layer) - dSize
+      val currentRadius = itemRadius.get(layer) + dRadius
+      val currentAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer) + dAngle else itemOddAngles.get(itemPerLayer) + dAngle
 
-        itemPerLayer++
+      layoutParams.width = currentSize.toInt()
+      layoutParams.height = currentSize.toInt()
+      layoutParams.circleRadius = currentRadius.toInt()
+      layoutParams.circleAngle = currentAngle.toFloat()
+      it.layoutParams = layoutParams
+
+      if (layer == 1) {
+        it.alpha = movementPercentage.toFloat() / 100f
       }
+
+      if (layer > MAX_LAYERS) {
+        it.alpha = ((100f - movementPercentage.toFloat()) / 100f)
+      }
+
+      if (layoutParams.width < itemSizes.get(layer + 1)) {
+        return
+      }
+
+      itemPerLayer++
     }
   }
 
@@ -254,5 +269,9 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
     if (r < 0) r += mod
 
     return r
+  }
+
+  fun Int.isFirstLayer(): Boolean {
+    return this == 1
   }
 }

@@ -5,10 +5,12 @@
   <dimen name="radialpager_second_level_item_size">64dp</dimen>
   <dimen name="radialpager_third_level_item_size">48dp</dimen>
   <dimen name="radialpager_fourth_level_item_size">32dp</dimen>
+  <dimen name="radialpager_fifth_level_item_size">24dp</dimen>
 
   <dimen name="radialpager_center_level_radius">0dp</dimen>
   <dimen name="radialpager_first_level_radius">100dp</dimen>
   <dimen name="radialpager_second_level_radius">164dp</dimen>
   <dimen name="radialpager_third_level_radius">180dp</dimen>
   <dimen name="radialpager_fourth_level_radius">200dp</dimen>
+  <dimen name="radialpager_fifth_level_radius">225dp</dimen>
 </resources>

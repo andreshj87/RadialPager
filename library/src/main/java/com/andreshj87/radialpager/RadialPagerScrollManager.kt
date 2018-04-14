@@ -6,9 +6,11 @@ import android.view.View
 
 class RadialPagerScrollManager(private val scrollListener: ScrollListener) : View.OnTouchListener {
 
-  var verticalCoordinate = 0
-  var previousVerticalCoordinate: Float = -1f
-  var blockMovement = false
+  private val movementMultiplier = 6
+
+  private var verticalCoordinate = 0
+  private var previousVerticalCoordinate: Float = -1f
+  private var blockMovement = false
 
   interface ScrollListener {
     fun snap()
@@ -40,14 +42,24 @@ class RadialPagerScrollManager(private val scrollListener: ScrollListener) : Vie
         if (event.y >= previousVerticalCoordinate) {
           Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y > previousVerticalCoordinate")
           verticalCoordinate++
-          if (verticalCoordinate*6 in 0..100 && !blockMovement) {
-            scrollListener.moveForward(verticalCoordinate*6)
-          }
+//          if (verticalCoordinate*movementMultiplier in 0..100 && !blockMovement) {
+//            scrollListener.moveForward(verticalCoordinate*movementMultiplier)
+//          }
         } else {
           Log.i(javaClass.simpleName, "[ACTION_MOVE] event.y IS NOT > previousVerticalCoordinate")
-          //verticalCoordinate--
-          //moveUpItems(verticalCoordinate / 8)
+          verticalCoordinate--
+//          if (verticalCoordinate*movementMultiplier in 0..100 && !blockMovement) {
+//            scrollListener.moveBackwards(verticalCoordinate * movementMultiplier)
+//          }
         }
+
+        var temp = verticalCoordinate * movementMultiplier
+        if (temp < 0) {
+          scrollListener.moveBackwards(temp * -1)
+        } else {
+          scrollListener.moveForward(temp)
+        }
+
         previousVerticalCoordinate = event.y
       }
       Log.i(javaClass.simpleName, "[ACTION_MOVE] Finishing... verticalCoordinate = " + verticalCoordinate)
@@ -55,5 +67,4 @@ class RadialPagerScrollManager(private val scrollListener: ScrollListener) : Vie
 
     return true
   }
-
 }
