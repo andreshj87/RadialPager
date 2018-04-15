@@ -7,8 +7,8 @@ import android.view.LayoutInflater
 
 class RadialPager<T> : ConstraintLayout, RadialPagerMovementListener {
 
-  private val radialPagerItemManager = RadialPagerItemManager<T>()
-  private val radialPagerRenderer = RadialPagerViewMovementListener<T>()
+  private val itemManager = RadialPagerItemManager<T>()
+  private val viewRenderer = RadialPagerViewRenderer<T>()
   private val scrollManager = RadialPagerScrollManager(this)
 
   constructor(context: Context?) : super(context) {
@@ -21,37 +21,47 @@ class RadialPager<T> : ConstraintLayout, RadialPagerMovementListener {
 
   fun init() {
     val baseView = LayoutInflater.from(context).inflate(R.layout.radial_pager, this, true)
-    radialPagerRenderer.init(context, baseView)
+    viewRenderer.init(context, baseView)
     setOnTouchListener(scrollManager)
   }
 
   override fun snapFoward(movementPercentage: Int) {
-    radialPagerRenderer.snapFoward(movementPercentage)
+    viewRenderer.snapFoward(movementPercentage)
+    /*if (movementPercentage > 50) {
+      viewRenderer.clearInnerLayer()
+      val nextLayer = itemManager.getNextLayer()
+      viewRenderer.appendLayer(nextLayer)
+    }*/
   }
 
   override fun snapBackwards(movementPercentage: Int) {
-    radialPagerRenderer.snapBackwards(movementPercentage)
+    viewRenderer.snapBackwards(movementPercentage)
+    /*if (movementPercentage > 50) {
+      viewRenderer.clearOuterLayer()
+      val prevousLayer = itemManager.getPreviousLayer()
+      viewRenderer.prependLayer(prevousLayer)
+    }*/
   }
 
   override fun moveForward(movementPercentage: Int) {
-    if (radialPagerItemManager.canMoveForward()) {
-      radialPagerRenderer.moveForward(movementPercentage)
+    if (itemManager.canMoveForward()) {
+      viewRenderer.moveForward(movementPercentage)
     }
   }
 
   override fun moveBackwards(movementPercentage: Int) {
-    if (radialPagerItemManager.canMoveBackwards()) {
-      radialPagerRenderer.moveBackwards(movementPercentage)
+    if (itemManager.canMoveBackwards()) {
+      viewRenderer.moveBackwards(movementPercentage)
     }
   }
 
   fun setCenterItem(centerItem: RadialPagerItem<T>) {
-    radialPagerRenderer.renderCenterView(centerItem)
+    viewRenderer.renderCenterView(centerItem)
   }
 
   fun setItems(items: ArrayList<RadialPagerItem<T>>) {
-    radialPagerItemManager.items = items
-    val initialItems = radialPagerItemManager.getInitialItems()
-    radialPagerRenderer.renderInitialItems(initialItems)
+    itemManager.items = items
+    val initialItems = itemManager.getInitialItems()
+    viewRenderer.renderInitialItems(initialItems)
   }
 }

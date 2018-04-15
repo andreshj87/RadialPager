@@ -10,8 +10,9 @@ import android.view.animation.Transformation
 import android.widget.ImageView
 import android.widget.TextView
 import de.hdodenhof.circleimageview.CircleImageView
+import java.util.*
 
-class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
+class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
 
   private val MAX_LAYERS = 3
   private val MAX_ITEMS_PER_LAYER = 6
@@ -27,7 +28,7 @@ class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
   private var baseView: View? = null
   private var constraintLayout: ConstraintLayout? = null
   private var centerView: ImageView? = null
-  private var itemViews = ArrayList<View>()
+  private var itemViews = LinkedList<View>()
 
   fun init(context: Context, baseView: View) {
     this.context = context
@@ -94,6 +95,7 @@ class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
     constraintLayout!!.startAnimation(snapBackwardsAnimation)
   }
 
+  // TODO when moving forward -> layer 0 doesn't move
   override fun moveForward(movementPercentage: Int) {
     Log.d(javaClass.simpleName, "[Moving forward] $movementPercentage")
     if (movementPercentage > 100) return
@@ -155,6 +157,7 @@ class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
     }
   }
 
+  // TODO when moving backwards -> layer 4 doesn't move
   override fun moveBackwards(movementPercentage: Int) {
     Log.d(javaClass.simpleName, "[Moving backwards] $movementPercentage")
     if (movementPercentage > 100) return
@@ -205,29 +208,79 @@ class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
     centerView?.setImageResource(centerItem.imageResource!!)
   }
 
-  fun renderInitialItems(item: ArrayList<RadialPagerItem<T>>) {
-    var currentLayer: Int = 1
-    var currentItemPerLayer: Int = 0
-    item.forEachIndexed { index, radialPagerItem ->
-      if (index >= MAX_ITEMS + MAX_ITEMS_PER_LAYER) {
-        return
-      }
-
-      if (radialPagerItem.imageResource == null && radialPagerItem.imageUrl == null) {
-        renderImagelessItem(radialPagerItem, index.toString(), currentLayer, currentItemPerLayer)
-      } else {
-        renderItem(radialPagerItem, currentLayer, currentItemPerLayer)
-      }
-
-      currentItemPerLayer++
-      if (currentItemPerLayer >= MAX_ITEMS_PER_LAYER) {
-        currentLayer++
-        currentItemPerLayer = 0
+  fun renderInitialItems(initialItems: ArrayList<RadialPagerItem<T>>) {
+    var layer: Int = 1
+    val layerItems = ArrayList<RadialPagerItem<T>>()
+    for (i in 0 until MAX_ITEMS + MAX_ITEMS_PER_LAYER) {
+      if (i<initialItems.size) layerItems.add(initialItems.get(i))
+      if (i.module(MAX_ITEMS_PER_LAYER) == MAX_ITEMS_PER_LAYER - 1) {
+        val layerItemViews = renderLayer(layer, layerItems)
+        layerItemViews.forEach {
+          itemViews.add(it)
+          constraintLayout?.addView(it)
+        }
+        layer++
+        layerItems.clear()
       }
     }
   }
 
-  fun renderItem(radialPagerItem: RadialPagerItem<T>, layer: Int, itemPerLayer: Int) {
+  fun appendLayer(layerItems: ArrayList<RadialPagerItem<T>>) {
+    val layerItemViews = renderLayer(MAX_LAYERS + 1, layerItems)
+    layerItemViews.forEach {
+      itemViews.add(it)
+      constraintLayout?.addView(it)
+    }
+  }
+
+  fun prependLayer(layerItems: ArrayList<RadialPagerItem<T>>) {
+    val layerItemViews = renderLayer(0, layerItems)
+    for (i in (layerItemViews.size-1)..0) {
+      itemViews.push(layerItemViews.get(i))
+      constraintLayout?.addView(layerItemViews.get(i))
+    }
+  }
+
+  fun clearInnerLayer() {
+    if (itemViews.size < 5*MAX_ITEMS_PER_LAYER) {
+      return
+    }
+
+    for (i in 0 until MAX_ITEMS_PER_LAYER) {
+      if (i<itemViews.size) {
+        val viewToRemove = itemViews.first()
+        constraintLayout?.removeView(viewToRemove)
+        itemViews.remove(viewToRemove)
+      }
+    }
+  }
+
+  fun clearOuterLayer() {
+    for (i in 0 until MAX_ITEMS_PER_LAYER) {
+      if (i<itemViews.size) {
+        val viewToRemove = itemViews.last()
+        constraintLayout?.removeView(viewToRemove)
+        itemViews.remove(viewToRemove)
+      }
+    }
+  }
+
+  fun renderLayer(layer: Int, layerItems: ArrayList<RadialPagerItem<T>>): ArrayList<View> {
+    val layerItemViews = ArrayList<View>()
+    for (currentItemInLayer in 0 until MAX_ITEMS_PER_LAYER) {
+      if (currentItemInLayer < layerItems.size) {
+        var itemView = renderImagelessItem(layerItems.get(currentItemInLayer), currentItemInLayer.toString(),
+            layer, currentItemInLayer) // TODO
+        layerItemViews.add(itemView)
+      } else {
+        // TODO render item filler
+      }
+    }
+
+    return layerItemViews
+  }
+
+  fun renderItem(radialPagerItem: RadialPagerItem<T>, layer: Int, itemPerLayer: Int): View {
     val item = CircleImageView(context)
     item.setImageResource(radialPagerItem.imageResource!!)
     val itemSize: Float = itemSizes.get(layer)
@@ -239,12 +292,13 @@ class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
     if (layer > MAX_LAYERS) {
       item.alpha = 0f
     }
-    itemViews.add(item)
-    constraintLayout!!.addView(item)
+    //itemViews.add(item)
+    //constraintLayout!!.addView(item)
+    return item
   }
 
   @Deprecated("Remove this eventually")
-  fun renderImagelessItem(radialPagerItem: RadialPagerItem<T>, text: String, layer: Int, itemPerLayer: Int) {
+  fun renderImagelessItem(radialPagerItem: RadialPagerItem<T>, text: String, layer: Int, itemPerLayer: Int): View {
     val item = TextView(context)
     item.text = text
     item.setTextColor(context?.resources!!.getColor(android.R.color.white))
@@ -259,8 +313,9 @@ class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
     if (layer > MAX_LAYERS) {
       item.alpha = 0f
     }
-    itemViews.add(item)
-    constraintLayout!!.addView(item)
+    //itemViews.add(item)
+    //constraintLayout!!.addView(item)
+    return item
   }
 
   fun Int.isEven(): Boolean {

@@ -34,7 +34,7 @@ class RadialPagerItemManager<T> {
     return initialItems
   }
 
-  fun getNextPage(): ArrayList<RadialPagerItem<T>> {
+  fun getNextLayer(): ArrayList<RadialPagerItem<T>> {
     val layerItems = getLayer(upperBound + 1)
     if (layerItems.isNotEmpty()) {
       lowerBound++
@@ -44,7 +44,7 @@ class RadialPagerItemManager<T> {
     return layerItems
   }
 
-  fun getPreviousPage(): ArrayList<RadialPagerItem<T>> {
+  fun getPreviousLayer(): ArrayList<RadialPagerItem<T>> {
     var layerItems = getLayer(lowerBound - 1)
     if (layerItems.isNotEmpty()) {
       lowerBound--
