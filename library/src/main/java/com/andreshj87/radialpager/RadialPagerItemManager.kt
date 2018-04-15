@@ -54,6 +54,14 @@ class RadialPagerItemManager<T> {
     return layerItems
   }
 
+  fun canMoveForward(): Boolean {
+    return upperBound < maxLayers
+  }
+
+  fun canMoveBackwards(): Boolean {
+    return lowerBound > 0
+  }
+
   private fun getLayer(layer: Int): ArrayList<RadialPagerItem<T>> {
     val layerItems = ArrayList<RadialPagerItem<T>>()
     for (i in layer..layer+MAX_ITEMS_PER_LAYER) {

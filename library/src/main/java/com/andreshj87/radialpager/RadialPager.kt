@@ -5,10 +5,10 @@ import android.support.constraint.ConstraintLayout
 import android.util.AttributeSet
 import android.view.LayoutInflater
 
-class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener {
+class RadialPager<T> : ConstraintLayout, RadialPagerMovementListener {
 
   private val radialPagerItemManager = RadialPagerItemManager<T>()
-  private val radialPagerRenderer = RadialPagerViewRenderer<T>()
+  private val radialPagerRenderer = RadialPagerViewMovementListener<T>()
   private val scrollManager = RadialPagerScrollManager(this)
 
   constructor(context: Context?) : super(context) {
@@ -25,16 +25,24 @@ class RadialPager<T> : ConstraintLayout, RadialPagerScrollManager.ScrollListener
     setOnTouchListener(scrollManager)
   }
 
-  override fun snap() {
-    radialPagerRenderer.snap()
+  override fun snapFoward(movementPercentage: Int) {
+    radialPagerRenderer.snapFoward(movementPercentage)
+  }
+
+  override fun snapBackwards(movementPercentage: Int) {
+    radialPagerRenderer.snapBackwards(movementPercentage)
   }
 
   override fun moveForward(movementPercentage: Int) {
-    radialPagerRenderer.moveForward(movementPercentage)
+    if (radialPagerItemManager.canMoveForward()) {
+      radialPagerRenderer.moveForward(movementPercentage)
+    }
   }
 
   override fun moveBackwards(movementPercentage: Int) {
-    radialPagerRenderer.moveBackwards(movementPercentage)
+    if (radialPagerItemManager.canMoveBackwards()) {
+      radialPagerRenderer.moveBackwards(movementPercentage)
+    }
   }
 
   fun setCenterItem(centerItem: RadialPagerItem<T>) {

@@ -5,16 +5,19 @@ import android.support.constraint.ConstraintLayout
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.Transformation
 import android.widget.ImageView
 import android.widget.TextView
 import de.hdodenhof.circleimageview.CircleImageView
 
-class RadialPagerViewRenderer<T>: RadialPagerRenderer {
+class RadialPagerViewMovementListener<T>: RadialPagerMovementListener {
 
   private val MAX_LAYERS = 3
   private val MAX_ITEMS_PER_LAYER = 6
   private val MAX_ITEMS = MAX_LAYERS * MAX_ITEMS_PER_LAYER
 
+  private val snapAnimationDuration: Long = 150
   private val itemSizes: ArrayList<Float> = ArrayList(MAX_LAYERS)
   private val itemRadius: ArrayList<Float> = ArrayList(MAX_LAYERS)
   private val itemOddAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LAYER)
@@ -61,8 +64,34 @@ class RadialPagerViewRenderer<T>: RadialPagerRenderer {
     itemEvenAngles.add(context.resources.getInteger(R.integer.radialpager_even_level_sixth_item_angle))
   }
 
-  override fun snap() {
-    Log.i(javaClass.simpleName, "Snap items!")
+  override fun snapFoward(movementPercentage: Int) {
+    val fromPercentage = movementPercentage
+    val toPercentage = if (movementPercentage <= 50) 0 else 100
+
+    val snapForwardAnimation: Animation = object: Animation() {
+      override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+        val currentPercentage = fromPercentage + ((toPercentage - fromPercentage) * interpolatedTime)
+        moveForward(currentPercentage.toInt())
+      }
+    }
+
+    snapForwardAnimation.duration = snapAnimationDuration
+    constraintLayout!!.startAnimation(snapForwardAnimation)
+  }
+
+  override fun snapBackwards(movementPercentage: Int) {
+    val fromPercentage = movementPercentage
+    val toPercentage = if (movementPercentage <= 50) 0 else 100
+
+    val snapBackwardsAnimation: Animation = object: Animation() {
+      override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+        val currentPercentage = fromPercentage + ((toPercentage - fromPercentage) * interpolatedTime)
+        moveBackwards(currentPercentage.toInt())
+      }
+    }
+
+    snapBackwardsAnimation.duration = snapAnimationDuration
+    constraintLayout!!.startAnimation(snapBackwardsAnimation)
   }
 
   override fun moveForward(movementPercentage: Int) {
