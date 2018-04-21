@@ -3,22 +3,30 @@ package com.andreshj87.radialpager
 class RadialPagerItem<T> private constructor(builder: Builder<*>) {
 
   val data: T
+  var text: String? = null
   var imageResource: Int? = null
   var imageUrl: String? = null
 
   init {
     this.data = builder.data as T
+    this.text = builder.text
     if (builder.imageResource != null) this.imageResource = builder.imageResource
     if (builder.imageUrl != null) this.imageUrl = builder.imageUrl
   }
 
   class Builder<T> {
     internal var data: T? = null
+    internal var text: String? = null
     internal var imageResource: Int? = null
     internal var imageUrl: String? = null
 
     fun data(data: T): Builder<T> {
       this.data = data
+      return this
+    }
+
+    fun text(text: String): Builder<T> {
+      this.text = text
       return this
     }
 

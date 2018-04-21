@@ -2,6 +2,7 @@ package com.andreshj87.radialpager.demo
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.andreshj87.radialpager.RadialPager
 import com.andreshj87.radialpager.RadialPagerItem
 
@@ -27,67 +28,14 @@ class MainActivity : AppCompatActivity() {
 
     radialPager.setCenterItem(radialPagerItemCenter)
 
-    val radialPagerItem = RadialPagerItem.Builder<Person>()
-        .data(person)
-        .build()
-
     val items: ArrayList<RadialPagerItem<Person>> = ArrayList()
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
-    // 5
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
-    items.add(radialPagerItem)
+    for (i in 1..48) {
+      val radialPagerItem = RadialPagerItem.Builder<Person>()
+          .data(person)
+          .text(i.toString())
+          .build()
+      items.add(radialPagerItem)
+    }
 
     radialPager.setItems(items)
   }

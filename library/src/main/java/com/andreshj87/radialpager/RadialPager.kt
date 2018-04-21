@@ -26,21 +26,25 @@ class RadialPager<T> : ConstraintLayout, RadialPagerMovementListener {
   }
 
   override fun snapFoward(movementPercentage: Int) {
+    if (!itemManager.canMoveForward()) return
+
     viewRenderer.snapFoward(movementPercentage)
-    /*if (movementPercentage > 50) {
+    if (movementPercentage > 50) {
       viewRenderer.clearInnerLayer()
       val nextLayer = itemManager.getNextLayer()
       viewRenderer.appendLayer(nextLayer)
-    }*/
+    }
   }
 
   override fun snapBackwards(movementPercentage: Int) {
+    if (!itemManager.canMoveBackwards()) return
+
     viewRenderer.snapBackwards(movementPercentage)
-    /*if (movementPercentage > 50) {
+    if (movementPercentage > 50) {
       viewRenderer.clearOuterLayer()
-      val prevousLayer = itemManager.getPreviousLayer()
-      viewRenderer.prependLayer(prevousLayer)
-    }*/
+      val previousLayer = itemManager.getPreviousLayer()
+      if (previousLayer.isNotEmpty()) viewRenderer.prependLayer(previousLayer)
+    }
   }
 
   override fun moveForward(movementPercentage: Int) {

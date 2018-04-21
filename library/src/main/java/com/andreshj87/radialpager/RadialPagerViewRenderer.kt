@@ -14,15 +14,24 @@ import java.util.*
 
 class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
 
-  private val MAX_LAYERS = 3
-  private val MAX_ITEMS_PER_LAYER = 6
-  private val MAX_ITEMS = MAX_LAYERS * MAX_ITEMS_PER_LAYER
+  private val LAYER_HIDDEN_INNER = 0
+  private val LAYER_HIDDEN_OUTER = 4
+
+  private val LAYERS_VISIBLE = 3
+  private val LAYERS_TOTAL = 5
+
+  private val ITEMS_PER_LAYER = 6
+  private val ITEMS_VISIBLE = LAYERS_VISIBLE * ITEMS_PER_LAYER
+
+  //private val MAX_LAYERS = 3
+  //private val MAX_ITEMS_PER_LAYER = 6
+  //private val MAX_ITEMS = MAX_LAYERS * MAX_ITEMS_PER_LAYER
 
   private val snapAnimationDuration: Long = 150
-  private val itemSizes: ArrayList<Float> = ArrayList(MAX_LAYERS)
-  private val itemRadius: ArrayList<Float> = ArrayList(MAX_LAYERS)
-  private val itemOddAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LAYER)
-  private val itemEvenAngles: ArrayList<Int> = ArrayList(MAX_ITEMS_PER_LAYER)
+  private val itemSizes: ArrayList<Float> = ArrayList(LAYERS_TOTAL)
+  private val itemRadius: ArrayList<Float> = ArrayList(LAYERS_TOTAL)
+  private val itemOddAngles: ArrayList<Int> = ArrayList(ITEMS_PER_LAYER)
+  private val itemEvenAngles: ArrayList<Int> = ArrayList(ITEMS_PER_LAYER)
 
   private var context: Context? = null
   private var baseView: View? = null
@@ -98,14 +107,15 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
   // TODO when moving forward -> layer 0 doesn't move
   override fun moveForward(movementPercentage: Int) {
     Log.d(javaClass.simpleName, "[Moving forward] $movementPercentage")
-    if (movementPercentage > 100) return
+    var distancePercentage = movementPercentage
+    if (movementPercentage > 100) distancePercentage = 100
 
     var layer: Int = 1
     var itemPerLayer: Int = 0
     itemViews.forEach {
       val layoutParams: ConstraintLayout.LayoutParams = it.layoutParams as ConstraintLayout.LayoutParams
 
-      if (itemPerLayer >= MAX_ITEMS_PER_LAYER) {
+      if (itemPerLayer >= ITEMS_PER_LAYER) {
         layer++
         itemPerLayer = 0
       }
@@ -119,16 +129,16 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
       val totalOddAngle = (itemOddAngles.get(itemPerLayer) - itemEvenAngles.get( (itemPerLayer-1).module(6) )).module(360)
       val totalAngle = if (layer.isEven()) totalEvenAngle else totalOddAngle
 
-      val dSize = (movementPercentage * totalSize) / 100
-      val dRadius = (movementPercentage * totalRadius) / 100
-      val dAngle = (movementPercentage * totalAngle) / 100
+      val dSize = (distancePercentage * totalSize) / 100
+      val dRadius = (distancePercentage * totalRadius) / 100
+      val dAngle = (distancePercentage * totalAngle) / 100
 
       val currentSize = itemSizes.get(layer) + dSize
       if (layer == 1 && itemPerLayer == 1) {
         Log.i(javaClass.simpleName, "Layer[0].size = " + itemSizes.get(layer-1))
         Log.i(javaClass.simpleName, "Actual CurrentLayerSize = " + layoutParams.width)
 
-        Log.i(javaClass.simpleName, "Percentage " + movementPercentage)
+        Log.i(javaClass.simpleName, "Percentage " + distancePercentage)
         Log.i(javaClass.simpleName, "dSize = " + dSize)
         Log.i(javaClass.simpleName, "Calculated currentSize = " + currentSize)
       }
@@ -142,11 +152,11 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
       it.layoutParams = layoutParams
 
       if (layer == 1) {
-        it.alpha = ((100f - movementPercentage.toFloat()) / 100f)
+        it.alpha = ((100f - distancePercentage.toFloat()) / 100f)
       }
 
-      if (layer > MAX_LAYERS) {
-        it.alpha = movementPercentage.toFloat() / 100f
+      if (layer == 4) {
+        it.alpha = distancePercentage.toFloat() / 100f
       }
 
       if (layoutParams.width > itemSizes.get(layer-1)) {
@@ -160,14 +170,19 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
   // TODO when moving backwards -> layer 4 doesn't move
   override fun moveBackwards(movementPercentage: Int) {
     Log.d(javaClass.simpleName, "[Moving backwards] $movementPercentage")
-    if (movementPercentage > 100) return
+    var distancePercentage = movementPercentage
+    if (movementPercentage > 100) distancePercentage = 100
 
-    var layer: Int = 1
+    var layer: Int = 0
     var itemPerLayer: Int = 0
     itemViews.forEach {
+      if (layer >= 4) {
+        return
+      }
+
       val layoutParams: ConstraintLayout.LayoutParams = it.layoutParams as ConstraintLayout.LayoutParams
 
-      if (itemPerLayer >= MAX_ITEMS_PER_LAYER) {
+      if (itemPerLayer >= ITEMS_PER_LAYER) {
         layer++
         itemPerLayer = 0
       }
@@ -178,9 +193,9 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
       val totalOddAngle = (itemOddAngles.get( (itemPerLayer+1).module(6) ) - itemEvenAngles.get(itemPerLayer)).module(360)
       val totalAngle = if (layer.isEven()) totalEvenAngle else totalOddAngle
 
-      val dSize = (movementPercentage * totalSize) / 100
-      val dRadius = (movementPercentage * totalRadius) / 100
-      val dAngle = (movementPercentage * totalAngle) / 100
+      val dSize = (distancePercentage * totalSize) / 100
+      val dRadius = (distancePercentage * totalRadius) / 100
+      val dAngle = (distancePercentage * totalAngle) / 100
 
       val currentSize = itemSizes.get(layer) - dSize
       val currentRadius = itemRadius.get(layer) + dRadius
@@ -192,8 +207,12 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
       layoutParams.circleAngle = currentAngle.toFloat()
       it.layoutParams = layoutParams
 
-      if (layer == MAX_LAYERS) {
-        it.alpha = ((100f - movementPercentage.toFloat()) / 100f)
+      if (layer == 0) {
+        it.alpha = distancePercentage.toFloat() / 100f
+      }
+
+      if (layer == 3) {
+        it.alpha = ((100f - distancePercentage.toFloat()) / 100f)
       }
 
       if (layoutParams.width < itemSizes.get(layer + 1)) {
@@ -211,9 +230,10 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
   fun renderInitialItems(initialItems: ArrayList<RadialPagerItem<T>>) {
     var layer: Int = 1
     val layerItems = ArrayList<RadialPagerItem<T>>()
-    for (i in 0 until MAX_ITEMS + MAX_ITEMS_PER_LAYER) {
+
+    for (i in 0 until ITEMS_VISIBLE + ITEMS_PER_LAYER) {
       if (i<initialItems.size) layerItems.add(initialItems.get(i))
-      if (i.module(MAX_ITEMS_PER_LAYER) == MAX_ITEMS_PER_LAYER - 1) {
+      if (i.module(ITEMS_PER_LAYER) == ITEMS_PER_LAYER - 1) {
         val layerItemViews = renderLayer(layer, layerItems)
         layerItemViews.forEach {
           itemViews.add(it)
@@ -226,7 +246,7 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
   }
 
   fun appendLayer(layerItems: ArrayList<RadialPagerItem<T>>) {
-    val layerItemViews = renderLayer(MAX_LAYERS + 1, layerItems)
+    val layerItemViews = renderLayer(LAYER_HIDDEN_OUTER, layerItems)
     layerItemViews.forEach {
       itemViews.add(it)
       constraintLayout?.addView(it)
@@ -234,19 +254,19 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
   }
 
   fun prependLayer(layerItems: ArrayList<RadialPagerItem<T>>) {
-    val layerItemViews = renderLayer(0, layerItems)
-    for (i in (layerItemViews.size-1)..0) {
+    val layerItemViews = renderLayer(LAYER_HIDDEN_INNER, layerItems)
+    for (i in layerItemViews.lastIndex..0) {
       itemViews.push(layerItemViews.get(i))
       constraintLayout?.addView(layerItemViews.get(i))
     }
   }
 
   fun clearInnerLayer() {
-    if (itemViews.size < 5*MAX_ITEMS_PER_LAYER) {
+    if (itemViews.size < LAYERS_TOTAL * ITEMS_PER_LAYER) {
       return
     }
 
-    for (i in 0 until MAX_ITEMS_PER_LAYER) {
+    for (i in 0 until ITEMS_PER_LAYER) {
       if (i<itemViews.size) {
         val viewToRemove = itemViews.first()
         constraintLayout?.removeView(viewToRemove)
@@ -256,7 +276,7 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
   }
 
   fun clearOuterLayer() {
-    for (i in 0 until MAX_ITEMS_PER_LAYER) {
+    for (i in 0 until ITEMS_PER_LAYER) {
       if (i<itemViews.size) {
         val viewToRemove = itemViews.last()
         constraintLayout?.removeView(viewToRemove)
@@ -267,9 +287,9 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
 
   fun renderLayer(layer: Int, layerItems: ArrayList<RadialPagerItem<T>>): ArrayList<View> {
     val layerItemViews = ArrayList<View>()
-    for (currentItemInLayer in 0 until MAX_ITEMS_PER_LAYER) {
+    for (currentItemInLayer in 0 until ITEMS_PER_LAYER) {
       if (currentItemInLayer < layerItems.size) {
-        var itemView = renderImagelessItem(layerItems.get(currentItemInLayer), currentItemInLayer.toString(),
+        var itemView = renderImagelessItem(layerItems.get(currentItemInLayer), layerItems.get(currentItemInLayer).text!!,
             layer, currentItemInLayer) // TODO
         layerItemViews.add(itemView)
       } else {
@@ -289,7 +309,7 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
     layoutParams.circleRadius = itemRadius.get(layer).toInt()
     layoutParams.circleAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer).toFloat() else itemOddAngles.get(itemPerLayer).toFloat()
     item.layoutParams = layoutParams
-    if (layer > MAX_LAYERS) {
+    if (layer.isHiddenLayer()) {
       item.alpha = 0f
     }
     //itemViews.add(item)
@@ -310,7 +330,7 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
     layoutParams.circleRadius = itemRadius.get(layer).toInt()
     layoutParams.circleAngle = if (layer.isEven()) itemEvenAngles.get(itemPerLayer).toFloat() else itemOddAngles.get(itemPerLayer).toFloat()
     item.layoutParams = layoutParams
-    if (layer > MAX_LAYERS) {
+    if (layer.isHiddenLayer()) {
       item.alpha = 0f
     }
     //itemViews.add(item)
@@ -329,7 +349,7 @@ class RadialPagerViewRenderer<T>: RadialPagerMovementListener {
     return r
   }
 
-  fun Int.isFirstLayer(): Boolean {
-    return this == 1
+  fun Int.isHiddenLayer(): Boolean {
+    return this == 0 || this == 4
   }
 }
